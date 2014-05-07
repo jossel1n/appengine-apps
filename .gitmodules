@@ -1,0 +1,3 @@
+[submodule "guestbook/guestbook"]
+	path = guestbook/guestbook
+	url = git://github.com/jossel1n/appengine-apps.git
