@@ -6,7 +6,6 @@ import os
 from django.utils import simplejson as json
 from google.appengine.ext.webapp.template import render
 from oauth2client.appengine import oauth2decorator_from_clientsecrets
-from google.appengine.api.memcache import Client
 
 # CLIENT_SECRETS, name of a file containing
 # the OAuth 2.0 information for this application,
@@ -32,7 +31,6 @@ group by state order by weeks
 decorator = oauth2decorator_from_clientsecrets(CLIENT_SECRETS,
     'https://www.googleapis.com/auth/bigquery')
 
-mem = Client()
 
 class InfoHandler(webapp2.RequestHandler):
     @decorator.oauth_aware
@@ -77,18 +75,15 @@ class MainHandler(webapp2.RequestHandler):
             newrow["c"].append({"v":row["f"][1]["v"]})
             geodata["rows"].append(newrow)
         geodata["cols"] = ({"id":columnNameGeo,"label":columnNameGeo,"type":"string"}, 
-                {"id":columnNameVal, "label":columnNameVal, "type":"number"})
+                           {"id":columnNameVal, "label":columnNameVal, "type":"number"})
         logging.info("FINAL GEODATA---")
         logging.info(geodata)
         return json.dumps(geodata, ensure_ascii=True)
         
     def get(self):
-        data = mem.get('natality')
-        if not(data):    
-            values = self._bq2geo()
-            data = { 'data': values,
-                     'query': QUERY }
-            mem.set('natality', data)
+        values = self._bq2geo()
+        data = { 'data': values,
+                 'query': QUERY }
         template = os.path.join(os.path.dirname(__file__), 'index.html')
         self.response.out.write(render(template, data))
 
